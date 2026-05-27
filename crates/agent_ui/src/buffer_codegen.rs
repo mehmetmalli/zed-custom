@@ -908,6 +908,11 @@ impl CodegenAlternative {
     }
 
     #[cfg(any(test, feature = "test-support"))]
+    pub fn current_completion(&self) -> Option<String> {
+        self.completion.clone()
+    }
+
+    #[cfg(any(test, feature = "test-support"))]
     pub fn current_description(&self) -> Option<String> {
         self.description.clone()
     }

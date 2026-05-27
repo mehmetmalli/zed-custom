@@ -18,9 +18,7 @@ use language::{
     language_settings::all_language_settings,
 };
 use project::{Project, ProjectPath, WorktreeId};
-use settings::{
-    EditPredictionDataCollectionChoice, EditPredictionProvider, update_settings_file,
-};
+use settings::{EditPredictionProvider, update_settings_file};
 use std::collections::{VecDeque, hash_map};
 use text::{AnchorRangeExt, Edit};
 use workspace::{AppState, Workspace};
@@ -2127,17 +2125,7 @@ impl EditPredictionStore {
             return true;
         }
 
-        match all_language_settings(None, cx)
-            .edit_predictions
-            .allow_data_collection
-        {
-            EditPredictionDataCollectionChoice::Yes => true,
-            EditPredictionDataCollectionChoice::No => false,
-            // Fall back to the legacy KV entry captured when the store was
-            // created, preserving existing users' choices without per-request
-            // database reads.
-            EditPredictionDataCollectionChoice::Default => self.legacy_data_collection_enabled,
-        }
+        self.legacy_data_collection_enabled
     }
 
     fn load_legacy_data_collection_enabled(cx: &App) -> bool {

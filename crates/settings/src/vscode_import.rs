@@ -176,9 +176,6 @@ impl VsCodeSettings {
             agent_servers: None,
             audio: None,
             base_keymap: Some(BaseKeymapContent::VSCode),
-            calls: None,
-            collaboration_panel: None,
-            credentials_url: None,
             debugger: None,
             diagnostics: None,
             editor: self.editor_settings_content(),
@@ -207,12 +204,10 @@ impl VsCodeSettings {
             proxy: self.read_string("http.proxy"),
             remote: RemoteSettingsContent::default(),
             repl: None,
-            server_url: None,
             session: None,
             status_bar: self.status_bar_settings_content(),
             tab_bar: self.tab_bar_settings_content(),
             tabs: self.item_settings_content(),
-            telemetry: self.telemetry_settings_content(),
             terminal: self.terminal_settings_content(),
             theme: Box::new(self.theme_settings_content()),
             title_bar: None,
@@ -849,21 +844,6 @@ impl VsCodeSettings {
         }
 
         skip_default(project_panel_settings)
-    }
-
-    fn telemetry_settings_content(&self) -> Option<TelemetrySettingsContent> {
-        self.read_enum("telemetry.telemetryLevel", |level| {
-            let (metrics, diagnostics) = match level {
-                "all" => (true, true),
-                "error" | "crash" => (false, true),
-                "off" => (false, false),
-                _ => return None,
-            };
-            Some(TelemetrySettingsContent {
-                metrics: Some(metrics),
-                diagnostics: Some(diagnostics),
-            })
-        })
     }
 
     fn terminal_settings_content(&self) -> Option<TerminalSettingsContent> {

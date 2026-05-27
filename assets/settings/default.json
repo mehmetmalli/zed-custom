@@ -477,13 +477,6 @@
     "space": "•",
     "tab": "→",
   },
-  // Settings related to calls in Zed
-  "calls": {
-    // Join calls with the microphone live by default
-    "mute_on_join": false,
-    // Share your project when you are the first to join a channel
-    "share_on_join": false,
-  },
   // Toolbar related settings
   "toolbar": {
     // Whether to show breadcrumbs.
@@ -509,8 +502,6 @@
     "show_project_items": true,
     // Whether to show onboarding banners in the titlebar.
     "show_onboarding_banner": true,
-    // Whether to show user picture in the titlebar.
-    "show_user_picture": true,
     // Whether to show the user menu in the titlebar.
     "show_user_menu": true,
     // Whether to show the menus in the titlebar.
@@ -929,14 +920,6 @@
     // Default depth to expand outline items in the current file.
     // Set to 0 to collapse all items that have children, 1 or higher to collapse items at that depth or deeper.
     "expand_outlines_with_depth": 100,
-  },
-  "collaboration_panel": {
-    // Whether to show the collaboration panel button in the status bar.
-    "button": true,
-    // Where to dock the collaboration panel. Can be 'left' or 'right'.
-    "dock": "right",
-    // Default width of the collaboration panel.
-    "default_width": 240,
   },
   "git_panel": {
     // Whether to show the git panel button in the status bar.
@@ -1471,13 +1454,6 @@
   //
   // Default: true
   "word_diff_enabled": true,
-  // Control what info is collected by Zed.
-  "telemetry": {
-    // Send debug info like crash reports.
-    "diagnostics": true,
-    // Send anonymized usage data like what languages you're using Zed with.
-    "metrics": true,
-  },
   // Whether to disable all AI features in Zed.
   //
   // Default: false
@@ -1695,14 +1671,6 @@
       "prompt_format": "infer",
       "max_output_tokens": 64,
     },
-    // Controls whether Zed may collect training data when using Zed's Edit Predictions.
-    // Data is only captured when the project is detected as open source.
-    // Possible values:
-    //   - "default": use the preference previously set via the status-bar toggle,
-    //     or false if no preference has been stored.
-    //   - "yes": allow data collection for files in open-source projects.
-    //   - "no": never allow data collection.
-    "allow_data_collection": "default",
   },
   // Settings specific to journaling
   "journal": {
@@ -2527,9 +2495,6 @@
     // Delay in milliseconds before showing the which-key popup.
     "delay_ms": 1000,
   },
-  // The server to connect to. If the environment variable
-  // ZED_SERVER_URL is set, it will override this setting.
-  "server_url": "https://zed.dev",
   // Settings overrides to use when using Zed Preview.
   // Mostly useful for developers who are managing multiple instances of Zed.
   "preview": {
@@ -2550,7 +2515,7 @@
   "stable": {
     // "theme": "Andromeda"
   },
-  // Settings overrides to use when using Zed Dev.
+  // Settings overrides to use when using Zed Lite.
   // Mostly useful for developers who are managing multiple instances of Zed.
   "dev": {
     // "theme": "Andromeda"

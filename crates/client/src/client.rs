@@ -79,21 +79,19 @@ pub static ZED_APP_PATH: LazyLock<Option<std::path::PathBuf>> =
 pub static ZED_ALWAYS_ACTIVE: LazyLock<bool> =
     LazyLock::new(|| std::env::var("ZED_ALWAYS_ACTIVE").is_ok_and(|e| !e.is_empty()));
 
+const DEFAULT_ZED_SERVER_URL: &str = "https://zed.dev";
+
 #[derive(Deserialize, RegisterSetting)]
 pub struct ClientSettings {
     pub server_url: String,
 }
 
 impl Settings for ClientSettings {
-    fn from_settings(content: &settings::SettingsContent) -> Self {
-        if let Some(server_url) = &*ZED_SERVER_URL {
-            return Self {
-                server_url: server_url.clone(),
-            };
-        }
-        Self {
-            server_url: content.server_url.clone().unwrap(),
-        }
+    fn from_settings(_content: &settings::SettingsContent) -> Self {
+        let server_url = ZED_SERVER_URL
+            .clone()
+            .unwrap_or_else(|| DEFAULT_ZED_SERVER_URL.to_string());
+        Self { server_url }
     }
 }
 
@@ -153,21 +151,6 @@ pub struct Client {
     _status: postage::watch::Sender<Status>,
     status_rx: postage::watch::Receiver<Status>,
     telemetry: Arc<Telemetry>,
-}
-
-#[derive(Copy, Clone, Debug, RegisterSetting)]
-pub struct TelemetrySettings {
-    pub diagnostics: bool,
-    pub metrics: bool,
-}
-
-impl settings::Settings for TelemetrySettings {
-    fn from_settings(content: &settings::SettingsContent) -> Self {
-        Self {
-            diagnostics: content.telemetry.as_ref().unwrap().diagnostics.unwrap(),
-            metrics: content.telemetry.as_ref().unwrap().metrics.unwrap(),
-        }
-    }
 }
 
 pub enum Subscription {

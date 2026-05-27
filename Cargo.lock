@@ -2798,23 +2798,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cloud_api_client"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-lock",
- "cloud_api_types",
- "futures 0.3.32",
- "gpui",
- "gpui_tokio",
- "http_client",
- "parking_lot",
- "serde_json",
- "thiserror 2.0.18",
- "yawc",
-]
-
-[[package]]
 name = "cloud_api_types"
 version = "0.1.0"
 dependencies = [
@@ -19315,15 +19298,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "webpki-roots"
-version = "1.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52f5ee44c96cf55f1b349600768e3ece3a8f26010c05265ab73f945bb1a2eb9d"
-dependencies = [
- "rustls-pki-types",
-]
-
-[[package]]
 name = "weezl"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -21054,35 +21028,6 @@ name = "yansi"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
-
-[[package]]
-name = "yawc"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f6a46c0f189bbef59a24169b1a6e4d8bc1e476f6ea05bc657cf8e67aa3fbb0c"
-dependencies = [
- "base64 0.22.1",
- "bytes 1.11.1",
- "flate2",
- "futures 0.3.32",
- "http-body-util",
- "hyper 1.10.0",
- "hyper-util",
- "js-sys",
- "nom 8.0.0",
- "pin-project",
- "rand 0.8.6",
- "sha1",
- "thiserror 2.0.18",
- "tokio",
- "tokio-rustls 0.26.4",
- "tokio-util",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "webpki-roots",
-]
 
 [[package]]
 name = "yazi"

@@ -156,9 +156,6 @@ pub struct SettingsContent {
     /// Default: VSCode
     pub base_keymap: Option<BaseKeymapContent>,
 
-    /// Configuration for the collab panel visual settings.
-    pub collaboration_panel: Option<PanelSettingsContent>,
-
     pub debugger: Option<DebuggerSettingsContent>,
 
     /// Configuration for Diagnostics-related features.
@@ -211,20 +208,8 @@ pub struct SettingsContent {
 
     pub proxy: Option<String>,
 
-    /// The URL of the Zed server to connect to.
-    pub server_url: Option<String>,
-
-    /// The URL used as the key for credential storage.
-    ///
-    /// When set, credentials are stored under this URL instead of `server_url`.
-    /// This allows running multiple Zed instances side by side without them
-    /// overwriting each other's keychain entries.
-    pub credentials_url: Option<String>,
-
     /// Configuration for session-related features
     pub session: Option<SessionSettingsContent>,
-    /// Control what info is collected by Zed.
-    pub telemetry: Option<TelemetrySettingsContent>,
 
     /// Configuration of the terminal in Zed.
     pub terminal: Option<TerminalSettingsContent>,
@@ -235,9 +220,6 @@ pub struct SettingsContent {
     ///
     /// Default: false
     pub vim_mode: Option<bool>,
-
-    // Settings related to calls in Zed
-    pub calls: Option<CallSettingsContent>,
 
     /// Settings for the which-key popup.
     pub which_key: Option<WhichKeySettingsContent>,
@@ -515,29 +497,6 @@ impl From<Option<String>> for AudioOutputDeviceName {
     }
 }
 
-/// Control what info is collected by Zed.
-#[with_fallible_options]
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Debug, MergeFrom)]
-pub struct TelemetrySettingsContent {
-    /// Send debug info like crash reports.
-    ///
-    /// Default: true
-    pub diagnostics: Option<bool>,
-    /// Send anonymized usage data like what languages you're using Zed with.
-    ///
-    /// Default: true
-    pub metrics: Option<bool>,
-}
-
-impl Default for TelemetrySettingsContent {
-    fn default() -> Self {
-        Self {
-            diagnostics: Some(true),
-            metrics: Some(true),
-        }
-    }
-}
-
 #[with_fallible_options]
 #[derive(Default, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Clone, MergeFrom)]
 pub struct DebuggerSettingsContent {
@@ -616,21 +575,6 @@ pub enum DockPosition {
     Left,
     Bottom,
     Right,
-}
-
-/// Configuration of voice calls in Zed.
-#[with_fallible_options]
-#[derive(Clone, PartialEq, Default, Serialize, Deserialize, JsonSchema, MergeFrom, Debug)]
-pub struct CallSettingsContent {
-    /// Whether the microphone should be muted when joining a channel or a call.
-    ///
-    /// Default: false
-    pub mute_on_join: Option<bool>,
-
-    /// Whether your current project should be shared when joining an empty channel.
-    ///
-    /// Default: false
-    pub share_on_join: Option<bool>,
 }
 
 #[with_fallible_options]
@@ -740,24 +684,6 @@ pub enum StatusStyle {
 )]
 pub struct ScrollbarSettings {
     pub show: Option<ShowScrollbar>,
-}
-
-#[with_fallible_options]
-#[derive(Clone, Default, Serialize, Deserialize, JsonSchema, MergeFrom, Debug, PartialEq)]
-pub struct PanelSettingsContent {
-    /// Whether to show the panel button in the status bar.
-    ///
-    /// Default: true
-    pub button: Option<bool>,
-    /// Where to dock the panel.
-    ///
-    /// Default: right
-    pub dock: Option<DockPosition>,
-    /// Default width of the panel in pixels.
-    ///
-    /// Default: 240
-    #[serde(serialize_with = "crate::serialize_optional_f32_with_two_decimal_places")]
-    pub default_width: Option<f32>,
 }
 
 #[with_fallible_options]
