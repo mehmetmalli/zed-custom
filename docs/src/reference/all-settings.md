@@ -268,16 +268,6 @@ Note that a save will be triggered when an unsaved tab is closed, even if this i
 
 `boolean` values
 
-## Auto Update
-
-- Description: Whether or not to automatically check for updates.
-- Setting: `auto_update`
-- Default: `true`
-
-**Options**
-
-`boolean` values
-
 ## Base Keymap
 
 - Description: Base key bindings scheme. Base keymaps can be overridden with user keymaps.
@@ -1840,7 +1830,7 @@ While other options may be changed at a runtime and should be placed under `sett
 ```json [settings]
 {
   "edit_predictions": {
-    "provider": "zed"
+    "provider": "copilot"
   }
 }
 ```
@@ -1858,7 +1848,7 @@ While other options may be changed at a runtime and should be placed under `sett
 ```json [settings]
 {
   "edit_predictions": {
-    "provider": "zed"
+    "provider": "copilot"
   }
 }
 ```
@@ -4815,7 +4805,6 @@ Run the {#action theme_selector::Toggle} action in the command palette to see a 
     "show_onboarding_banner": true,
     "show_user_picture": true,
     "show_user_menu": true,
-    "show_sign_in": true,
     "show_menus": false,
     "button_layout": "platform_default"
   }
@@ -4830,7 +4819,6 @@ Run the {#action theme_selector::Toggle} action in the command palette to see a 
 - `show_onboarding_banner`: Whether to show onboarding banners in the titlebar
 - `show_user_picture`: Whether to show user picture in the titlebar
 - `show_user_menu`: Whether to show the user menu button in the titlebar (the one that displays your avatar by default and contains options like Settings, Keymap, Themes, etc.)
-- `show_sign_in`: Whether to show the sign in button in the titlebar
 - `show_menus`: Whether to show the menus in the titlebar
 - `button_layout`: The layout of window control buttons in the title bar (Linux only). Can be set to `"platform_default"` to follow the system setting, `"standard"` to use Zed's built-in layout, or a custom format like `"close:minimize,maximize"`
 

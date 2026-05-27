@@ -397,25 +397,6 @@ fn general_page(cx: &App) -> SettingsPage {
         ]
     }
 
-    fn auto_update_section() -> [SettingsPageItem; 2] {
-        [
-            SettingsPageItem::SectionHeader("Auto Update"),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Auto Update",
-                description: "Whether or not to automatically check for updates.",
-                field: Box::new(SettingField {
-                    json_path: Some("auto_update"),
-                    pick: |settings_content| settings_content.auto_update.as_ref(),
-                    write: |settings_content, value, _| {
-                        settings_content.auto_update = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-        ]
-    }
-
     SettingsPage {
         title: "General",
         items: concat_sections!(
@@ -425,7 +406,6 @@ fn general_page(cx: &App) -> SettingsPage {
             workspace_restoration_section(),
             scoped_settings_section(),
             privacy_section(),
-            auto_update_section(),
         )
         .into(),
     }
@@ -3703,7 +3683,7 @@ fn window_and_layout_page() -> SettingsPage {
         ]
     }
 
-    fn title_bar_section() -> [SettingsPageItem; 10] {
+    fn title_bar_section() -> [SettingsPageItem; 9] {
         [
             SettingsPageItem::SectionHeader("Title Bar"),
             SettingsPageItem::SettingItem(SettingItem {
@@ -3789,24 +3769,6 @@ fn window_and_layout_page() -> SettingsPage {
                             .title_bar
                             .get_or_insert_default()
                             .show_onboarding_banner = value;
-                    },
-                }),
-                metadata: None,
-                files: USER,
-            }),
-            SettingsPageItem::SettingItem(SettingItem {
-                title: "Show Sign In",
-                description: "Show the sign in button in the titlebar.",
-                field: Box::new(SettingField {
-                    json_path: Some("title_bar.show_sign_in"),
-                    pick: |settings_content| {
-                        settings_content.title_bar.as_ref()?.show_sign_in.as_ref()
-                    },
-                    write: |settings_content, value, _| {
-                        settings_content
-                            .title_bar
-                            .get_or_insert_default()
-                            .show_sign_in = value;
                     },
                 }),
                 metadata: None,

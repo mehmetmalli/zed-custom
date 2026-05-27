@@ -1,7 +1,7 @@
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, fmt::Write as _, mem, path::Path, sync::Arc};
-use telemetry_events::EditPredictionRating;
+use crate::EditPredictionRating;
 
 pub use zeta_prompt::udiff::{
     CURSOR_POSITION_MARKER, encode_cursor_in_patch, extract_cursor_from_patch,

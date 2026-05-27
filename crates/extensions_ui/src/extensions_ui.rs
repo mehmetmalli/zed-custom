@@ -1044,7 +1044,6 @@ impl ExtensionsPage {
                 .on_click({
                     let extension_id = extension.id.clone();
                     move |_, _, cx| {
-                        telemetry::event!("Extension Installed");
                         ExtensionStore::global(cx).update(cx, |store, cx| {
                             store.install_latest_extension(extension_id.clone(), cx)
                         });
@@ -1099,7 +1098,6 @@ impl ExtensionsPage {
                 .on_click({
                     let extension_id = extension.id.clone();
                     move |_, _, cx| {
-                        telemetry::event!("Extension Uninstalled", extension_id);
                         ExtensionStore::global(cx).update(cx, |store, cx| {
                             store
                                 .uninstall_extension(extension_id.clone(), cx)
@@ -1156,7 +1154,6 @@ impl ExtensionsPage {
                                 let extension_id = extension.id.clone();
                                 let version = extension.manifest.version.clone();
                                 move |_, _, cx| {
-                                    telemetry::event!("Extension Installed", extension_id, version);
                                     ExtensionStore::global(cx).update(cx, |store, cx| {
                                         store
                                             .upgrade_extension(
@@ -1449,11 +1446,6 @@ impl ExtensionsPage {
             .end_icon(Icon::new(IconName::ArrowUpRight).size(IconSize::Small))
             .on_click({
                 move |_event, _window, cx| {
-                    telemetry::event!(
-                        "Documentation Viewed",
-                        source = "Feature Upsell",
-                        url = docs_url,
-                    );
                     cx.open_url(&docs_url)
                 }
             });
@@ -1488,10 +1480,6 @@ impl ExtensionsPage {
                                                 )
                                                 .on_click(cx.listener(
                                                     move |this, selection, _, cx| {
-                                                        telemetry::event!(
-                                                            "Vim Mode Toggled",
-                                                            source = "Feature Upsell"
-                                                        );
                                                         this.update_settings(
                                                             selection,
                                                             cx,

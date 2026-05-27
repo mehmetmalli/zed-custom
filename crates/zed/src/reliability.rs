@@ -285,9 +285,7 @@ async fn upload_minidump(
         .text("sentry[tags][binary]", metadata.init.binary.clone())
         .text("sentry[release]", metadata.init.commit_sha.clone())
         .text("platform", "rust");
-    let mut panic_message = "".to_owned();
     if let Some(panic_info) = metadata.panic.as_ref() {
-        panic_message = panic_info.message.clone();
         form = form
             .text("sentry[logentry][formatted]", panic_info.message.clone())
             .text("span", panic_info.span.clone());
@@ -317,12 +315,6 @@ async fn upload_minidump(
         form = form.text("sentry[user][id]", format!("installation-{}", id))
     }
 
-    ::telemetry::event!(
-        "Minidump Uploaded",
-        panic_message = panic_message,
-        crashed_version = metadata.init.zed_version.clone(),
-        commit_sha = metadata.init.commit_sha.clone(),
-    );
 
     let gpu_count = metadata.gpus.len();
     for (index, gpu) in metadata.gpus.iter().cloned().enumerate() {
@@ -407,6 +399,7 @@ async fn upload_minidump(
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct BuildTiming {
     started_at: chrono::DateTime<chrono::Utc>,
     duration_ms: f32,
@@ -428,13 +421,13 @@ async fn upload_build_timings(_client: Arc<Client>) -> Result<()> {
         return Ok(());
     }
 
-    let cpu_count = std::thread::available_parallelism()
+    let _cpu_count = std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(1);
     let system = System::new_with_specifics(
         RefreshKind::nothing().with_memory(MemoryRefreshKind::everything()),
     );
-    let ram_size_gb = (system.total_memory() as f64) / (1024.0 * 1024.0 * 1024.0);
+    let _ram_size_gb = (system.total_memory() as f64) / (1024.0 * 1024.0 * 1024.0);
 
     let mut entries = smol::fs::read_dir(&build_timings_dir).await?;
     while let Some(entry) = entries.next().await {
@@ -453,7 +446,7 @@ async fn upload_build_timings(_client: Arc<Client>) -> Result<()> {
             }
         };
 
-        let timing: BuildTiming = match serde_json::from_str(&contents) {
+        let _timing: BuildTiming = match serde_json::from_str(&contents) {
             Ok(timing) => timing,
             Err(err) => {
                 log::warn!("Failed to parse build timing file {:?}: {}", path, err);
@@ -461,17 +454,6 @@ async fn upload_build_timings(_client: Arc<Client>) -> Result<()> {
             }
         };
 
-        telemetry::event!(
-            "Build Timing: Cargo Build",
-            started_at = timing.started_at.to_rfc3339(),
-            duration_ms = timing.duration_ms,
-            first_crate = timing.first_crate,
-            target = timing.target,
-            blocked_ms = timing.blocked_ms,
-            command = timing.command,
-            cpu_count = cpu_count,
-            ram_size_gb = ram_size_gb
-        );
 
         if let Err(err) = smol::fs::remove_file(&path).await {
             log::warn!("Failed to delete build timing file {:?}: {}", path, err);

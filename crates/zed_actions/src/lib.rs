@@ -69,14 +69,10 @@ actions!(
         OpenLicenses,
         /// Opens the Zed status page.
         OpenStatusPage,
-        /// Opens the telemetry log.
-        OpenTelemetryLog,
         /// Opens the performance profiler.
         OpenPerformanceProfiler,
         /// Opens the onboarding view.
         OpenOnboarding,
-        /// Shows the auto-update notification for testing.
-        ShowUpdateNotification,
     ]
 );
 
@@ -111,12 +107,6 @@ pub struct Extensions {
 #[action(namespace = zed)]
 #[serde(deny_unknown_fields)]
 pub struct AcpRegistry;
-
-/// Show call diagnostics and connection quality statistics.
-#[derive(PartialEq, Clone, Default, Debug, Deserialize, JsonSchema, Action)]
-#[action(namespace = collab)]
-#[serde(deny_unknown_fields)]
-pub struct ShowCallStats;
 
 /// Decreases the font size in the editor buffer.
 #[derive(PartialEq, Clone, Default, Debug, Deserialize, JsonSchema, Action)]
@@ -367,22 +357,6 @@ pub mod project_panel {
         ]
     );
 }
-pub mod feedback {
-    use gpui::actions;
-
-    actions!(
-        feedback,
-        [
-            /// Opens email client to send feedback to Zed support.
-            EmailZed,
-            /// Opens the bug report form.
-            FileBugReport,
-            /// Opens the feature request form.
-            RequestFeature
-        ]
-    );
-}
-
 pub mod theme {
     use gpui::actions;
 

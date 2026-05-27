@@ -122,10 +122,6 @@ impl BufferCodegen {
             .push(cx.subscribe(&codegen, |_, _, event, cx| cx.emit(*event)));
     }
 
-    pub fn active_completion(&self, cx: &App) -> Option<String> {
-        self.active_alternative().read(cx).current_completion()
-    }
-
     pub fn active_alternative(&self) -> &Entity<CodegenAlternative> {
         &self.alternatives[self.active_alternative]
     }
@@ -641,7 +637,7 @@ impl CodegenAlternative {
         cx: &mut Context<Self>,
     ) -> Task<()> {
         let anthropic_reporter = AnthropicEventReporter::new(&model, cx);
-        let session_id = self.session_id;
+        let _session_id = self.session_id;
         let model_telemetry_id = model.telemetry_id();
         let model_provider_id = model.provider_id().to_string();
         let start_time = Instant::now();
@@ -710,8 +706,8 @@ impl CodegenAlternative {
                 .ok()
                 .and_then(|stream| stream.message_id.clone());
             let generate = async {
-                let model_telemetry_id = model_telemetry_id.clone();
-                let model_provider_id = model_provider_id.clone();
+                let _model_telemetry_id = model_telemetry_id.clone();
+                let _model_provider_id = model_provider_id.clone();
                 let (mut diff_tx, mut diff_rx) = mpsc::channel(1);
                 let message_id = message_id.clone();
                 let line_based_stream_diff: Task<anyhow::Result<()>> = cx.background_spawn({
@@ -819,19 +815,7 @@ impl CodegenAlternative {
 
                         let result = diff.await;
 
-                        let error_message = result.as_ref().err().map(|error| error.to_string());
-                        telemetry::event!(
-                            "Assistant Responded",
-                            kind = "inline",
-                            phase = "response",
-                            session_id = session_id.to_string(),
-                            model = model_telemetry_id,
-                            model_provider = model_provider_id,
-                            language_name = language_name.as_ref().map(|n| n.to_string()),
-                            message_id = message_id.as_deref(),
-                            response_latency = response_latency,
-                            error_message = error_message.as_deref(),
-                        );
+                        let _error_message = result.as_ref().err().map(|error| error.to_string());
 
                         anthropic_reporter.report(AnthropicEventData {
                             completion_type: AnthropicCompletionType::Editor,
@@ -912,14 +896,8 @@ impl CodegenAlternative {
                     this.elapsed_time = Some(elapsed_time);
                     this.completion = Some(completion.lock().clone());
                     if let Some(usage) = token_usage {
-                        let usage = usage.lock();
-                        telemetry::event!(
-                            "Inline Assistant Completion",
-                            model = model_telemetry_id,
-                            model_provider = model_provider_id,
-                            input_tokens = usage.input_tokens,
-                            output_tokens = usage.output_tokens,
-                        )
+                        let _usage = usage.lock();
+                        ()
                     }
 
                     cx.emit(CodegenEvent::Finished);
