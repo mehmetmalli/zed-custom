@@ -41,7 +41,7 @@ use language_model::{
     LanguageModelRequest, LanguageModelRequestMessage, LanguageModelRequestTool,
     LanguageModelToolResult, LanguageModelToolResultContent, LanguageModelToolSchemaFormat,
     LanguageModelToolUse, LanguageModelToolUseId, Role, SelectedModel, Speed, StopReason,
-    TokenUsage, ZED_CLOUD_PROVIDER_ID,
+    TokenUsage,
 };
 use project::Project;
 use prompt_store::ProjectContext;
@@ -2096,17 +2096,6 @@ impl Thread {
                 anyhow::Ok((model, request))
             })??;
 
-            telemetry::event!(
-                "Agent Thread Completion",
-                thread_id = this.read_with(cx, |this, _| this.id.to_string())?,
-                parent_thread_id = this.read_with(cx, |this, _| this
-                    .parent_thread_id()
-                    .map(|id| id.to_string()))?,
-                prompt_id = this.read_with(cx, |this, _| this.prompt_id.to_string())?,
-                model = model.telemetry_id(),
-                model_provider = model.provider_id().to_string(),
-                attempt
-            );
 
             log::debug!("Calling model.stream_completion, attempt {}", attempt);
 
@@ -2315,19 +2304,9 @@ impl Thread {
         &mut self,
         error: LanguageModelCompletionError,
         attempt: u8,
-        plan: Option<Plan>,
+        _plan: Option<Plan>,
     ) -> Result<acp_thread::RetryStatus> {
-        let Some(model) = self.model.as_ref() else {
-            return Err(anyhow!(error));
-        };
-
-        let auto_retry = if model.provider_id() == ZED_CLOUD_PROVIDER_ID {
-            plan.is_some()
-        } else {
-            true
-        };
-
-        if !auto_retry {
+        if self.model.is_none() {
             return Err(anyhow!(error));
         }
 
@@ -2417,18 +2396,6 @@ impl Thread {
                 ));
             }
             UsageUpdate(usage) => {
-                telemetry::event!(
-                    "Agent Thread Completion Usage Updated",
-                    thread_id = self.id.to_string(),
-                    parent_thread_id = self.parent_thread_id().map(|id| id.to_string()),
-                    prompt_id = self.prompt_id.to_string(),
-                    model = self.model.as_ref().map(|m| m.telemetry_id()),
-                    model_provider = self.model.as_ref().map(|m| m.provider_id().to_string()),
-                    input_tokens = usage.input_tokens,
-                    output_tokens = usage.output_tokens,
-                    cache_creation_input_tokens = usage.cache_creation_input_tokens,
-                    cache_read_input_tokens = usage.cache_read_input_tokens,
-                );
                 self.update_token_usage(usage, cx);
             }
             Stop(StopReason::Refusal) => return Err(CompletionError::Refusal.into()),

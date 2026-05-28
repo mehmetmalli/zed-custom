@@ -2004,22 +2004,15 @@ impl AcpThread {
         let path_style = self.project.read(cx).path_style(cx);
         let id = update.tool_call_id.clone();
 
-        let agent_telemetry_id = self.connection().telemetry_id();
-        let session = self.session_id();
-        let parent_session_id = self.parent_session_id();
+        let _agent_telemetry_id = self.connection().telemetry_id();
+        let _session = self.session_id();
+        let _parent_session_id = self.parent_session_id();
         if let ToolCallStatus::Completed | ToolCallStatus::Failed = status {
-            let status = if matches!(status, ToolCallStatus::Completed) {
+            let _status = if matches!(status, ToolCallStatus::Completed) {
                 "completed"
             } else {
                 "failed"
             };
-            telemetry::event!(
-                "Agent Tool Call Completed",
-                agent_telemetry_id,
-                session,
-                parent_session_id,
-                status
-            );
         }
 
         if let Some(ix) = self.index_for_tool_call(&id) {

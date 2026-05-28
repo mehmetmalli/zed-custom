@@ -14,10 +14,7 @@ The Inline Assistant sends your current selection (or line) to a language model 
 ## Getting Started
 
 If you're using the Inline Assistant for the first time, you need to have at least one LLM provider or external agent configured.
-You can do that by:
-
-1. [subscribing to our Pro plan](https://zed.dev/pricing), so you have access to our hosted models
-2. [using your own API keys](./llm-providers.md#use-your-own-keys), either from model providers like Anthropic or model gateways like OpenRouter.
+You can do that by [using your own API keys](./llm-providers.md#use-your-own-keys), either from model providers like Anthropic or model gateways like OpenRouter.
 
 If you have already set up an LLM provider to interact with [the Agent Panel](./agent-panel.md#getting-started), then that will also work for the Inline Assistant.
 

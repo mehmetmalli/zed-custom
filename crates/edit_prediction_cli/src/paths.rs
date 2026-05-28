@@ -16,6 +16,7 @@ pub static RUN_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
         .join("runs")
         .join(chrono::Local::now().format("%d-%m-%y-%H_%M_%S").to_string())
 });
+#[allow(dead_code)]
 pub static LATEST_EXAMPLE_RUN_DIR: LazyLock<PathBuf> = LazyLock::new(|| DATA_DIR.join("latest"));
 pub static LATEST_FAILED_EXAMPLES_DIR: LazyLock<PathBuf> =
     LazyLock::new(|| DATA_DIR.join("latest_failed"));
