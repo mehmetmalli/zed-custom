@@ -119,7 +119,6 @@ impl ProjectDiff {
         window: &mut Window,
         cx: &mut Context<Workspace>,
     ) {
-        telemetry::event!("Git Branch Diff Opened");
         let project = workspace.project().clone();
         let intended_repo = project.read(cx).active_repository(cx);
 
@@ -240,14 +239,6 @@ impl ProjectDiff {
         window: &mut Window,
         cx: &mut Context<Workspace>,
     ) {
-        telemetry::event!(
-            "Git Diff Opened",
-            source = if entry.is_some() {
-                "Git Panel"
-            } else {
-                "Action"
-            }
-        );
         let intended_repo = workspace.project().read(cx).active_repository(cx);
 
         let existing = workspace
@@ -303,7 +294,6 @@ impl ProjectDiff {
         window: &mut Window,
         cx: &mut Context<Workspace>,
     ) {
-        telemetry::event!("Git Diff Opened", source = "Agent Panel");
         let existing = workspace
             .items_of_type::<Self>(cx)
             .find(|item| matches!(item.read(cx).diff_base(cx), DiffBase::Head));

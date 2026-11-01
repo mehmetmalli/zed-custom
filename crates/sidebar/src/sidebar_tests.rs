@@ -353,7 +353,6 @@ async fn start_remote_project(
     let remote_client = remote::RemoteClient::connect_mock(opts.clone(), cx).await;
     let project = cx.update(|cx| {
         let project_client = client::Client::new(
-            Arc::new(clock::FakeSystemClock::new()),
             http_client::FakeHttpClient::with_404_response(),
             cx,
         );
@@ -13091,7 +13090,6 @@ async fn test_remote_project_integration_does_not_briefly_render_as_separate_pro
     let remote_client = remote::RemoteClient::connect_mock(original_opts.clone(), cx).await;
     let project = cx.update(|cx| {
         let project_client = client::Client::new(
-            Arc::new(clock::FakeSystemClock::new()),
             http_client::FakeHttpClient::with_404_response(),
             cx,
         );

@@ -10,7 +10,6 @@ use std::cell::RefCell;
 use acp_thread::{ContentBlock, PlanEntry};
 use agent::{SkillLoadingError, SkillLoadingErrorsUpdated};
 use agent_settings::UserAgentsMd;
-use cloud_api_types::{SubmitAgentThreadFeedbackBody, SubmitAgentThreadFeedbackCommentsBody};
 use editor::actions::OpenExcerpts;
 use feature_flags::AcpBetaFeatureFlag;
 
@@ -41,24 +40,16 @@ struct ThreadFeedbackState {
 impl ThreadFeedbackState {
     pub fn submit(
         &mut self,
-        thread: Entity<AcpThread>,
+        _thread: Entity<AcpThread>,
         feedback: ThreadFeedback,
         window: &mut Window,
         cx: &mut App,
     ) {
-        let Some(telemetry) = thread.read(cx).connection().telemetry() else {
-            return;
-        };
-
-        let project = thread.read(cx).project().read(cx);
-        let client = project.client();
-        let user_store = project.user_store();
-        let organization = user_store.read(cx).current_organization();
-
+        // Submission of agent thread feedback to zed.dev has been removed
+        // along with the cloud sign-in flow. Track UI state locally only.
         if self.feedback == Some(feedback) {
             return;
         }
-
         self.feedback = Some(feedback);
         match feedback {
             ThreadFeedback::Positive => {
@@ -68,75 +59,12 @@ impl ThreadFeedbackState {
                 self.comments_editor = Some(Self::build_feedback_comments_editor(window, cx));
             }
         }
-        let session_id = thread.read(cx).session_id().clone();
-        let parent_session_id = thread.read(cx).parent_session_id().cloned();
-        let agent_telemetry_id = thread.read(cx).connection().telemetry_id();
-        let task = telemetry.thread_data(&session_id, cx);
-        let rating = match feedback {
-            ThreadFeedback::Positive => "positive",
-            ThreadFeedback::Negative => "negative",
-        };
-        cx.background_spawn(async move {
-            let thread = task.await?;
-
-            client
-                .cloud_client()
-                .submit_agent_feedback(SubmitAgentThreadFeedbackBody {
-                    organization_id: organization.map(|organization| organization.id.clone()),
-                    agent: agent_telemetry_id.to_string(),
-                    session_id: session_id.to_string(),
-                    parent_session_id: parent_session_id.map(|id| id.to_string()),
-                    rating: rating.to_string(),
-                    thread,
-                })
-                .await?;
-
-            anyhow::Ok(())
-        })
-        .detach_and_log_err(cx);
     }
 
-    pub fn submit_comments(&mut self, thread: Entity<AcpThread>, cx: &mut App) {
-        let Some(telemetry) = thread.read(cx).connection().telemetry() else {
-            return;
-        };
-
-        let Some(comments) = self
-            .comments_editor
-            .as_ref()
-            .map(|editor| editor.read(cx).text(cx))
-            .filter(|text| !text.trim().is_empty())
-        else {
-            return;
-        };
-
+    pub fn submit_comments(&mut self, _thread: Entity<AcpThread>, _cx: &mut App) {
+        // Submission of agent thread comments to zed.dev has been removed
+        // along with the cloud sign-in flow.
         self.comments_editor.take();
-
-        let project = thread.read(cx).project().read(cx);
-        let client = project.client();
-        let user_store = project.user_store();
-        let organization = user_store.read(cx).current_organization();
-
-        let session_id = thread.read(cx).session_id().clone();
-        let agent_telemetry_id = thread.read(cx).connection().telemetry_id();
-        let task = telemetry.thread_data(&session_id, cx);
-        cx.background_spawn(async move {
-            let thread = task.await?;
-
-            client
-                .cloud_client()
-                .submit_agent_feedback_comments(SubmitAgentThreadFeedbackCommentsBody {
-                    organization_id: organization.map(|organization| organization.id.clone()),
-                    agent: agent_telemetry_id.to_string(),
-                    session_id: session_id.to_string(),
-                    comments,
-                    thread,
-                })
-                .await?;
-
-            anyhow::Ok(())
-        })
-        .detach_and_log_err(cx);
     }
 
     pub fn clear(&mut self) {
@@ -1258,7 +1186,7 @@ impl ThreadView {
     }
 
     fn emit_token_limit_telemetry_if_needed(&mut self, cx: &App) {
-        let (ratio, agent_telemetry_id, session_id) = {
+        let (ratio, _agent_telemetry_id, _session_id) = {
             let thread_data = self.thread.read(cx);
             let Some(token_usage) = thread_data.token_usage() else {
                 return;
@@ -1270,7 +1198,7 @@ impl ThreadView {
             )
         };
 
-        let kind = match ratio {
+        let _kind = match ratio {
             acp_thread::TokenUsageRatio::Normal => {
                 self.last_token_limit_telemetry = None;
                 return;
@@ -1289,12 +1217,6 @@ impl ThreadView {
 
         self.last_token_limit_telemetry = Some(ratio);
 
-        telemetry::event!(
-            "Agent Token Limit Warning",
-            agent = agent_telemetry_id,
-            session_id = session_id,
-            kind = kind,
-        );
     }
 
     // sending
@@ -1421,16 +1343,16 @@ impl ThreadView {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let session_id = self.thread.read(cx).session_id().clone();
-        let parent_session_id = self.thread.read(cx).parent_session_id().cloned();
-        let agent_telemetry_id = self.thread.read(cx).connection().telemetry_id();
+        let _session_id = self.thread.read(cx).session_id().clone();
+        let _parent_session_id = self.thread.read(cx).parent_session_id().cloned();
+        let _agent_telemetry_id = self.thread.read(cx).connection().telemetry_id();
         let is_first_message = self.thread.read(cx).entries().is_empty();
         let thread = self.thread.downgrade();
 
         self.is_loading_contents = true;
 
-        let model_id = self.current_model_id(cx);
-        let mode_id = self.current_mode_id(cx);
+        let _model_id = self.current_model_id(cx);
+        let _mode_id = self.current_mode_id(cx);
         let guard = cx.new(|_| ());
         cx.observe_release(&guard, |this, _guard, cx| {
             this.is_loading_contents = false;
@@ -1438,7 +1360,7 @@ impl ThreadView {
         })
         .detach();
 
-        let side = crate::agent_sidebar_side(cx);
+        let _side = crate::agent_sidebar_side(cx);
 
         let task = cx.spawn_in(window, async move |this, cx| {
             let Some((contents, tracked_buffers)) = contents_task.await? else {
@@ -1502,15 +1424,6 @@ impl ThreadView {
                 });
                 drop(guard);
 
-                telemetry::event!(
-                    "Agent Message Sent",
-                    agent = agent_telemetry_id,
-                    session = session_id,
-                    parent_session_id = parent_session_id.as_ref().map(|id| id.to_string()),
-                    model = model_id,
-                    mode = mode_id,
-                    side = side
-                );
 
                 thread.send(contents, cx)
             })?;
@@ -1521,25 +1434,14 @@ impl ThreadView {
             });
 
             let res = send.await;
-            let turn_time_ms = turn_start_time.elapsed().as_millis();
+            let _turn_time_ms = turn_start_time.elapsed().as_millis();
             drop(_stop_turn);
-            let status = if res.is_ok() {
+            let _status = if res.is_ok() {
                 let _ = this.update(cx, |this, _| this.in_flight_prompt.take());
                 "success"
             } else {
                 "failure"
             };
-            telemetry::event!(
-                "Agent Turn Completed",
-                agent = agent_telemetry_id,
-                session = session_id,
-                parent_session_id = parent_session_id.as_ref().map(|id| id.to_string()),
-                model = model_id,
-                mode = mode_id,
-                status,
-                turn_time_ms,
-                side = side
-            );
             res.map(|_| ())
         });
 
@@ -1618,7 +1520,7 @@ impl ThreadView {
     }
 
     fn emit_thread_error_telemetry(&self, error: &ThreadError, cx: &mut Context<Self>) {
-        let (error_kind, acp_error_code, message): (&str, Option<SharedString>, SharedString) =
+        let (_error_kind, _acp_error_code, _message): (&str, Option<SharedString>, SharedString) =
             match error {
                 ThreadError::PaymentRequired => (
                     "payment_required",
@@ -1699,23 +1601,14 @@ impl ThreadView {
                 } => ("other", acp_error_code.clone(), message.clone()),
             };
 
-        let agent_telemetry_id = self.thread.read(cx).connection().telemetry_id();
-        let session_id = self.thread.read(cx).session_id().clone();
-        let parent_session_id = self
+        let _agent_telemetry_id = self.thread.read(cx).connection().telemetry_id();
+        let _session_id = self.thread.read(cx).session_id().clone();
+        let _parent_session_id = self
             .thread
             .read(cx)
             .parent_session_id()
             .map(|id| id.to_string());
 
-        telemetry::event!(
-            "Agent Panel Error Shown",
-            agent = agent_telemetry_id,
-            session_id = session_id,
-            parent_session_id = parent_session_id,
-            kind = error_kind,
-            acp_error_code = acp_error_code,
-            message = message,
-        );
     }
 
     pub fn cancel_generation(&mut self, cx: &mut Context<Self>) {
@@ -2530,7 +2423,6 @@ impl ThreadView {
                 .ok();
         }
 
-        telemetry::event!("Follow Agent Selected", following = !following);
     }
 
     // other
@@ -8704,9 +8596,8 @@ impl ThreadView {
                                                 this.expanded_tool_calls
                                                     .insert(tool_call_id.clone());
                                             }
-                                            let expanded =
+                                            let _expanded =
                                                 this.expanded_tool_calls.contains(&tool_call_id);
-                                            telemetry::event!("Subagent Toggled", expanded);
                                             cx.notify();
                                         }
                                     }))
@@ -8725,7 +8616,6 @@ impl ThreadView {
                                     |this, thread| {
                                         this.on_click(cx.listener(
                                             move |_this, _event, _window, cx| {
-                                                telemetry::event!("Subagent Stopped");
                                                 thread.update(cx, |thread, cx| {
                                                     thread.cancel(cx).detach();
                                                 });
@@ -8763,7 +8653,6 @@ impl ThreadView {
                     )
                     .tooltip(Tooltip::text("Make Subagent Full Screen"))
                     .on_click(cx.listener(move |this, _event, window, cx| {
-                        telemetry::event!("Subagent Maximized");
                         this.server_view
                             .update(cx, |this, cx| {
                                 this.navigate_to_thread(nav_session_id.clone(), window, cx);

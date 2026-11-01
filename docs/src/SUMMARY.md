@@ -61,7 +61,6 @@
 
 # Account & Billing
 
-- [Authenticate](./authentication.md)
 - [Plans & Pricing](./ai/plans-and-usage.md)
 - [Billing](./ai/billing.md)
 

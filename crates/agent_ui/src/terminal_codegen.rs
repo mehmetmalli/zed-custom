@@ -44,9 +44,9 @@ impl TerminalCodegen {
         };
 
         let anthropic_reporter = AnthropicEventReporter::new(&model, cx);
-        let session_id = self.session_id;
-        let model_telemetry_id = model.telemetry_id();
-        let model_provider_id = model.provider_id().to_string();
+        let _session_id = self.session_id;
+        let _model_telemetry_id = model.telemetry_id();
+        let _model_provider_id = model.provider_id().to_string();
 
         self.status = CodegenStatus::Pending;
         self.transaction = Some(TerminalTransaction::start(self.terminal.clone()));
@@ -82,20 +82,8 @@ impl TerminalCodegen {
 
                         let result = task.await;
 
-                        let error_message = result.as_ref().err().map(|error| error.to_string());
+                        let _error_message = result.as_ref().err().map(|error| error.to_string());
 
-                        telemetry::event!(
-                            "Assistant Responded",
-                            session_id = session_id.to_string(),
-                            kind = "inline_terminal",
-                            phase = "response",
-                            model = model_telemetry_id,
-                            model_provider = model_provider_id,
-                            language_name = Option::<&str>::None,
-                            message_id = message_id,
-                            response_latency = response_latency,
-                            error_message = error_message,
-                        );
 
                         anthropic_reporter.report(AnthropicEventData {
                             completion_type: AnthropicCompletionType::Terminal,
@@ -140,12 +128,6 @@ impl TerminalCodegen {
             .ok();
         });
         cx.notify();
-    }
-
-    pub fn completion(&self) -> Option<String> {
-        self.transaction
-            .as_ref()
-            .map(|transaction| transaction.completion.clone())
     }
 
     pub fn stop(&mut self, cx: &mut Context<Self>) {

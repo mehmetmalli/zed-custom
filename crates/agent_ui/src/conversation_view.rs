@@ -426,15 +426,9 @@ impl Conversation {
         let Some(thread) = self.threads.get(&session_id) else {
             return;
         };
-        let agent_telemetry_id = thread.read(cx).connection().telemetry_id();
-        let session_id = thread.read(cx).session_id().clone();
+        let _agent_telemetry_id = thread.read(cx).connection().telemetry_id();
+        let _session_id = thread.read(cx).session_id().clone();
 
-        telemetry::event!(
-            "Agent Tool Call Authorized",
-            agent = agent_telemetry_id,
-            session = session_id,
-            option = outcome.option_kind
-        );
 
         thread.update(cx, |thread, cx| {
             thread.authorize_tool_call(tool_call_id, outcome, cx);
@@ -894,7 +888,7 @@ impl ConversationView {
         title: Option<SharedString>,
         project: Entity<Project>,
         initial_content: Option<AgentInitialContent>,
-        source: AgentThreadSource,
+        _source: AgentThreadSource,
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> ServerState {
@@ -927,8 +921,8 @@ impl ConversationView {
 
         let connect_result = connection_entry.read(cx).wait_for_connection();
 
-        let side = crate::agent_sidebar_side(cx);
-        let thread_location = "current_worktree";
+        let _side = crate::agent_sidebar_side(cx);
+        let _thread_location = "current_worktree";
 
         let load_task = cx.spawn_in(window, async move |this, cx| {
             let connection = match connect_result.await {
@@ -943,13 +937,6 @@ impl ConversationView {
                 }
             };
 
-            telemetry::event!(
-                "Agent Thread Started",
-                agent = connection.telemetry_id(),
-                source = source.as_str(),
-                side = side,
-                thread_location = thread_location
-            );
 
             let mut resumed_without_history = false;
             let result = if let Some(session_id) = resume_session_id.clone() {
@@ -1824,7 +1811,7 @@ impl ConversationView {
             return;
         };
 
-        let agent_telemetry_id = connection.telemetry_id();
+        let _agent_telemetry_id = connection.telemetry_id();
 
         if let Some(login_task) = connection.terminal_auth_task(&method, cx) {
             configuration_view.take();
@@ -1852,15 +1839,9 @@ impl ConversationView {
                     .await;
 
                     match &result {
-                        Ok(_) => telemetry::event!(
-                            "Authenticate Agent Succeeded",
-                            agent = agent_telemetry_id
-                        ),
+                        Ok(_) => (),
                         Err(_) => {
-                            telemetry::event!(
-                                "Authenticate Agent Failed",
-                                agent = agent_telemetry_id,
-                            )
+                            ()
                         }
                     }
 
@@ -1903,12 +1884,9 @@ impl ConversationView {
                 let result = authenticate.await;
 
                 match &result {
-                    Ok(_) => telemetry::event!(
-                        "Authenticate Agent Succeeded",
-                        agent = agent_telemetry_id
-                    ),
+                    Ok(_) => (),
                     Err(_) => {
-                        telemetry::event!("Authenticate Agent Failed", agent = agent_telemetry_id,)
+                        ()
                     }
                 }
 
@@ -2166,7 +2144,7 @@ impl ConversationView {
                     .rev()
                     .map(|(ix, method)| {
                         let (method_id, name) = (method.id().0.clone(), method.name().to_string());
-                        let agent_telemetry_id = connection.telemetry_id();
+                        let _agent_telemetry_id = connection.telemetry_id();
 
                         Button::new(method_id.clone(), name)
                             .label_size(LabelSize::Small)
@@ -2182,11 +2160,6 @@ impl ConversationView {
                             })
                             .on_click({
                                 cx.listener(move |this, _, window, cx| {
-                                    telemetry::event!(
-                                        "Authenticate Agent Started",
-                                        agent = agent_telemetry_id,
-                                        method = method_id
-                                    );
 
                                     this.authenticate(
                                         acp::AuthMethodId::new(method_id.clone()),
@@ -2252,21 +2225,15 @@ impl ConversationView {
     }
 
     fn emit_load_error_telemetry(&self, error: &LoadError) {
-        let error_kind = match error {
+        let _error_kind = match error {
             LoadError::Unsupported { .. } => "unsupported",
             LoadError::FailedToInstall(_) => "failed_to_install",
             LoadError::Exited { .. } => "exited",
             LoadError::Other(_) => "other",
         };
 
-        let agent_name = self.agent.agent_id();
+        let _agent_name = self.agent.agent_id();
 
-        telemetry::event!(
-            "Agent Panel Error Shown",
-            agent = agent_name,
-            kind = error_kind,
-            message = error.to_string(),
-        );
     }
 
     fn render_load_error(

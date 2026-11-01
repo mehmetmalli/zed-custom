@@ -6,12 +6,9 @@ use edit_prediction_types::{
     DataCollectionState, EditPredictionDelegate, EditPredictionDiscardReason,
     EditPredictionIconSet, SuggestionDisplayType,
 };
-use feature_flags::FeatureFlagAppExt;
-use fs::Fs;
 use gpui::{App, Entity, prelude::*};
 use language::{Buffer, ToPoint as _};
 use project::Project;
-use settings::{EditPredictionDataCollectionChoice, update_settings_file};
 
 use crate::{BufferEditPrediction, EditPredictionStore};
 
@@ -93,33 +90,11 @@ impl EditPredictionDelegate for ZedEditPredictionDelegate {
         }
     }
 
-    fn can_toggle_data_collection(&self, cx: &App) -> bool {
-        if cx.is_staff() {
-            return false;
-        }
-
-        self.store
-            .read(cx)
-            .is_data_collection_allowed_by_organization(cx)
+    fn can_toggle_data_collection(&self, _cx: &App) -> bool {
+        false
     }
 
-    fn toggle_data_collection(&mut self, cx: &mut App) {
-        let fs = <dyn Fs>::global(cx);
-        let is_currently_enabled = self.store.read(cx).is_data_collection_enabled(cx);
-        update_settings_file(fs, cx, move |settings, _| {
-            let edit_predictions = settings
-                .project
-                .all_languages
-                .edit_predictions
-                .get_or_insert_default();
-
-            edit_predictions.allow_data_collection = Some(if is_currently_enabled {
-                EditPredictionDataCollectionChoice::No
-            } else {
-                EditPredictionDataCollectionChoice::Yes
-            });
-        });
-    }
+    fn toggle_data_collection(&mut self, _cx: &mut App) {}
 
     fn usage(&self, cx: &App) -> Option<client::EditPredictionUsage> {
         self.store.read(cx).usage(cx)

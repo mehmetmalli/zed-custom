@@ -16,10 +16,10 @@ use itertools::{Either, Itertools};
 use settings::{DocumentFoldingRanges, DocumentSymbols, IntoGpui, SemanticTokens};
 
 pub use settings::{
-    AutoIndentMode, CompletionSettingsContent, EditPredictionDataCollectionChoice,
-    EditPredictionPromptFormatContent, EditPredictionProvider, EditPredictionsMode, FormatOnSave,
-    Formatter, FormatterList, InlayHintKind, LanguageSettingsContent, LineEndingSetting,
-    LspInsertMode, RewrapBehavior, ShowWhitespaceSetting, SoftWrap, WordsCompletionMode,
+    AutoIndentMode, CompletionSettingsContent, EditPredictionPromptFormatContent,
+    EditPredictionProvider, EditPredictionsMode, FormatOnSave, Formatter, FormatterList,
+    InlayHintKind, LanguageSettingsContent, LineEndingSetting, LspInsertMode, RewrapBehavior,
+    ShowWhitespaceSetting, SoftWrap, WordsCompletionMode,
 };
 use settings::{RegisterSetting, Settings, SettingsLocation, SettingsStore, merge_from::MergeFrom};
 use shellexpand;
@@ -459,7 +459,7 @@ impl InlayHintSettings {
     }
 }
 
-/// The settings for edit predictions, such as [GitHub Copilot](https://github.com/features/copilot).
+/// The settings for edit predictions.
 #[derive(Clone, Debug, Default)]
 pub struct EditPredictionSettings {
     /// The provider that supplies edit predictions.
@@ -470,18 +470,11 @@ pub struct EditPredictionSettings {
     pub disabled_globs: Vec<DisabledGlob>,
     /// Configures how edit predictions are displayed in the buffer.
     pub mode: settings::EditPredictionsMode,
-    /// Settings specific to GitHub Copilot.
-    pub copilot: CopilotSettings,
     /// Settings specific to Codestral.
     pub codestral: CodestralSettings,
     /// Settings specific to Ollama.
     pub ollama: Option<OpenAiCompatibleEditPredictionSettings>,
     pub open_ai_compatible_api: Option<OpenAiCompatibleEditPredictionSettings>,
-    /// Controls whether training data collection is enabled.
-    ///
-    /// `Default` means the value stored in the legacy KV store is used as a fallback,
-    /// preserving existing users' choices without a migration.
-    pub allow_data_collection: EditPredictionDataCollectionChoice,
 }
 
 impl EditPredictionSettings {
@@ -502,18 +495,6 @@ impl EditPredictionSettings {
 pub struct DisabledGlob {
     matcher: GlobMatcher,
     is_absolute: bool,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct CopilotSettings {
-    /// HTTP/HTTPS proxy to use for Copilot.
-    pub proxy: Option<String>,
-    /// Disable certificate verification for proxy (not recommended).
-    pub proxy_no_verify: Option<bool>,
-    /// Enterprise URI for Copilot.
-    pub enterprise_uri: Option<String>,
-    /// Whether the Copilot Next Edit Suggestions feature is enabled.
-    pub enable_next_edit_suggestions: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -832,14 +813,6 @@ impl settings::Settings for AllLanguageSettings {
             .iter()
             .collect();
 
-        let copilot = edit_predictions.copilot.unwrap();
-        let copilot_settings = CopilotSettings {
-            proxy: copilot.proxy,
-            proxy_no_verify: copilot.proxy_no_verify,
-            enterprise_uri: copilot.enterprise_uri,
-            enable_next_edit_suggestions: copilot.enable_next_edit_suggestions,
-        };
-
         let codestral = edit_predictions.codestral.unwrap();
         let codestral_settings = CodestralSettings {
             model: codestral.model,
@@ -906,11 +879,9 @@ impl settings::Settings for AllLanguageSettings {
                     })
                     .collect(),
                 mode: edit_predictions_mode,
-                copilot: copilot_settings,
                 codestral: codestral_settings,
                 ollama: ollama_settings,
                 open_ai_compatible_api: openai_compatible_settings,
-                allow_data_collection: edit_predictions.allow_data_collection.unwrap_or_default(),
             },
             defaults: default_language_settings,
             languages,

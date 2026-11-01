@@ -73,24 +73,16 @@ anyhow.workspace = true
 askpass.workspace = true
 assets.workspace = true
 audio.workspace = true
-auto_update.workspace = true
-auto_update_ui.workspace = true
 breadcrumbs.workspace = true
-call.workspace = true
 chrono.workspace = true
-channel.workspace = true
 clap.workspace = true
 cli.workspace = true
 client.workspace = true
 codestral.workspace = true
-collab_ui.workspace = true
 collections.workspace = true
 command_palette.workspace = true
 component.workspace = true
 component_preview.workspace = true
-copilot.workspace = true
-copilot_chat.workspace = true
-copilot_ui.workspace = true
 crashes.workspace = true
 csv_preview.workspace = true
 dap_adapters.workspace = true
@@ -107,7 +99,6 @@ extension.workspace = true
 extension_host.workspace = true
 extensions_ui.workspace = true
 feature_flags.workspace = true
-feedback.workspace = true
 file_finder.workspace = true
 fs.workspace = true
 futures.workspace = true
@@ -194,8 +185,6 @@ sysinfo.workspace = true
 tab_switcher.workspace = true
 task.workspace = true
 tasks_ui.workspace = true
-telemetry.workspace = true
-telemetry_events.workspace = true
 terminal_view.workspace = true
 theme.workspace = true
 theme_settings.workspace = true
@@ -253,7 +242,6 @@ image.workspace = true
 pkg-config = "0.3.22"
 
 [dev-dependencies]
-call = { workspace = true, features = ["test-support"] }
 editor = { workspace = true, features = ["test-support"] }
 gpui = { workspace = true, features = ["input-latency-histogram", "test-support"] }
 image_viewer = { workspace = true, features = ["test-support"] }
@@ -273,9 +261,9 @@ repl = { workspace = true, features = ["test-support"] }
 
 
 [package.metadata.bundle-dev]
-icon = ["resources/app-icon-dev@2x.png", "resources/app-icon-dev.png"]
+icon = ["resources/app-icon-nightly@2x.png", "resources/app-icon-nightly.png"]
 identifier = "dev.zed.Zed-Dev"
-name = "Zed Dev"
+name = "Zed Lite"
 osx_minimum_system_version = "10.15.7"
 osx_info_plist_exts = ["resources/info/*"]
 osx_url_schemes = ["zed"]
@@ -289,7 +277,7 @@ osx_info_plist_exts = ["resources/info/*"]
 osx_url_schemes = ["zed"]
 
 [package.metadata.bundle-preview]
-icon = ["resources/app-icon-preview@2x.png", "resources/app-icon-preview.png"]
+icon = ["resources/app-icon-nightly@2x.png", "resources/app-icon-nightly.png"]
 identifier = "dev.zed.Zed-Preview"
 name = "Zed Preview"
 osx_minimum_system_version = "10.15.7"
@@ -297,7 +285,7 @@ osx_info_plist_exts = ["resources/info/*"]
 osx_url_schemes = ["zed"]
 
 [package.metadata.bundle-stable]
-icon = ["resources/app-icon@2x.png", "resources/app-icon.png"]
+icon = ["resources/app-icon-nightly@2x.png", "resources/app-icon-nightly.png"]
 identifier = "dev.zed.Zed"
 name = "Zed"
 osx_minimum_system_version = "10.15.7"

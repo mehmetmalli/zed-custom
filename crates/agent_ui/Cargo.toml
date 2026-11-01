@@ -34,7 +34,6 @@ async-channel.workspace = true
 agent_servers.workspace = true
 agent_settings.workspace = true
 agent_skills.workspace = true
-ai_onboarding.workspace = true
 anyhow.workspace = true
 heapless.workspace = true
 audio = { workspace = true, optional = true }
@@ -98,7 +97,6 @@ serde_json_lenient.workspace = true
 settings.workspace = true
 streaming_diff.workspace = true
 task.workspace = true
-telemetry.workspace = true
 terminal.workspace = true
 terminal_view.workspace = true
 text.workspace = true

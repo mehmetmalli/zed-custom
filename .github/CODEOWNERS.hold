@@ -215,9 +215,6 @@
 /ci/ @zed-industries/platform-team
 /crates/askpass/ @zed-industries/platform-team
 /crates/audio/ @zed-industries/platform-team
-/crates/auto_update/ @zed-industries/platform-team
-/crates/auto_update_helper/ @zed-industries/platform-team
-/crates/auto_update_ui/ @zed-industries/platform-team
 /crates/cli/ @zed-industries/platform-team
 /crates/command_palette/ @zed-industries/platform-team
 /crates/command_palette_hooks/ @zed-industries/platform-team

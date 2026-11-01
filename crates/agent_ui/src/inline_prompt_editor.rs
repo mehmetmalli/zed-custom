@@ -50,7 +50,7 @@ actions!(inline_assistant, [ThumbsUpResult, ThumbsDownResult]);
 
 enum CompletionState {
     Pending,
-    Generated { completion_text: Option<String> },
+    Generated,
     Rated,
 }
 
@@ -569,10 +569,10 @@ impl<T: 'static> PromptEditor<T> {
             return;
         };
 
-        let model_telemetry_id = model.model.telemetry_id();
-        let model_provider_id = model.provider.id().to_string();
+        let _model_telemetry_id = model.model.telemetry_id();
+        let _model_provider_id = model.provider.id().to_string();
 
-        let (kind, language_name) = match &self.mode {
+        let (_kind, _language_name) = match &self.mode {
             PromptEditorMode::Buffer { codegen, .. } => {
                 let codegen = codegen.read(cx);
                 (
@@ -583,15 +583,6 @@ impl<T: 'static> PromptEditor<T> {
             PromptEditorMode::Terminal { .. } => ("inline_terminal", None),
         };
 
-        telemetry::event!(
-            "Assistant Started",
-            session_id = self.session_state.session_id.to_string(),
-            kind = kind,
-            phase = "started",
-            model = model_telemetry_id,
-            model_provider = model_provider_id,
-            language_name = language_name,
-        );
     }
 
     fn thumbs_up(&mut self, _: &ThumbsUpResult, _window: &mut Window, cx: &mut Context<Self>) {
@@ -608,9 +599,9 @@ impl<T: 'static> PromptEditor<T> {
                 );
                 return;
             }
-            CompletionState::Generated { completion_text } => {
+            CompletionState::Generated => {
                 let model_info = self.model_selector.read(cx).active_model(cx);
-                let (model_id, use_streaming_tools) = {
+                let (_model_id, _use_streaming_tools) = {
                     let Some(configured_model) = model_info else {
                         self.toast("No configured model", None, cx);
                         return;
@@ -624,31 +615,20 @@ impl<T: 'static> PromptEditor<T> {
                     )
                 };
 
-                let selected_text = match &self.mode {
+                let _selected_text = match &self.mode {
                     PromptEditorMode::Buffer { codegen, .. } => {
                         codegen.read(cx).selected_text(cx).map(|s| s.to_string())
                     }
                     PromptEditorMode::Terminal { .. } => None,
                 };
 
-                let prompt = self.editor.read(cx).text(cx);
+                let _prompt = self.editor.read(cx).text(cx);
 
-                let kind = match &self.mode {
+                let _kind = match &self.mode {
                     PromptEditorMode::Buffer { .. } => "inline",
                     PromptEditorMode::Terminal { .. } => "inline_terminal",
                 };
 
-                telemetry::event!(
-                    "Inline Assistant Rated",
-                    rating = "positive",
-                    session_id = self.session_state.session_id.to_string(),
-                    kind = kind,
-                    model = model_id,
-                    prompt = prompt,
-                    completion = completion_text,
-                    selected_text = selected_text,
-                    use_streaming_tools
-                );
 
                 self.session_state.completion = CompletionState::Rated;
 
@@ -671,9 +651,9 @@ impl<T: 'static> PromptEditor<T> {
                 );
                 return;
             }
-            CompletionState::Generated { completion_text } => {
+            CompletionState::Generated => {
                 let model_info = self.model_selector.read(cx).active_model(cx);
-                let (model_telemetry_id, use_streaming_tools) = {
+                let (_model_telemetry_id, _use_streaming_tools) = {
                     let Some(configured_model) = model_info else {
                         self.toast("No configured model", None, cx);
                         return;
@@ -687,31 +667,20 @@ impl<T: 'static> PromptEditor<T> {
                     )
                 };
 
-                let selected_text = match &self.mode {
+                let _selected_text = match &self.mode {
                     PromptEditorMode::Buffer { codegen, .. } => {
                         codegen.read(cx).selected_text(cx).map(|s| s.to_string())
                     }
                     PromptEditorMode::Terminal { .. } => None,
                 };
 
-                let prompt = self.editor.read(cx).text(cx);
+                let _prompt = self.editor.read(cx).text(cx);
 
-                let kind = match &self.mode {
+                let _kind = match &self.mode {
                     PromptEditorMode::Buffer { .. } => "inline",
                     PromptEditorMode::Terminal { .. } => "inline_terminal",
                 };
 
-                telemetry::event!(
-                    "Inline Assistant Rated",
-                    rating = "negative",
-                    session_id = self.session_state.session_id.to_string(),
-                    kind = kind,
-                    model = model_telemetry_id,
-                    prompt = prompt,
-                    completion = completion_text,
-                    selected_text = selected_text,
-                    use_streaming_tools
-                );
 
                 self.session_state.completion = CompletionState::Rated;
 
@@ -1317,7 +1286,7 @@ impl PromptEditor<BufferCodegen> {
 
     fn handle_codegen_changed(
         &mut self,
-        codegen: Entity<BufferCodegen>,
+        _codegen: Entity<BufferCodegen>,
         cx: &mut Context<PromptEditor<BufferCodegen>>,
     ) {
         match self.codegen_status(cx) {
@@ -1331,10 +1300,7 @@ impl PromptEditor<BufferCodegen> {
                     .update(cx, |editor, _| editor.set_read_only(true));
             }
             CodegenStatus::Done => {
-                let completion = codegen.read(cx).active_completion(cx);
-                self.session_state.completion = CompletionState::Generated {
-                    completion_text: completion,
-                };
+                self.session_state.completion = CompletionState::Generated;
                 self.edited_since_done = false;
                 self.editor
                     .update(cx, |editor, _| editor.set_read_only(false));
@@ -1490,7 +1456,7 @@ impl PromptEditor<TerminalCodegen> {
         }
     }
 
-    fn handle_codegen_changed(&mut self, codegen: Entity<TerminalCodegen>, cx: &mut Context<Self>) {
+    fn handle_codegen_changed(&mut self, _codegen: Entity<TerminalCodegen>, cx: &mut Context<Self>) {
         match &self.codegen().read(cx).status {
             CodegenStatus::Idle => {
                 self.editor
@@ -1502,9 +1468,7 @@ impl PromptEditor<TerminalCodegen> {
                     .update(cx, |editor, _| editor.set_read_only(true));
             }
             CodegenStatus::Done | CodegenStatus::Error(_) => {
-                self.session_state.completion = CompletionState::Generated {
-                    completion_text: codegen.read(cx).completion(),
-                };
+                self.session_state.completion = CompletionState::Generated;
                 self.edited_since_done = false;
                 self.editor
                     .update(cx, |editor, _| editor.set_read_only(false));

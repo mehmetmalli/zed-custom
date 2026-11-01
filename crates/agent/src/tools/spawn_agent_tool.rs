@@ -172,16 +172,11 @@ impl AgentTool for SpawnAgentTool {
 
             let send_result = subagent.send(input.message, cx).await;
 
-            let status = if send_result.is_ok() {
+            let _status = if send_result.is_ok() {
                 "completed"
             } else {
                 "error"
             };
-            telemetry::event!(
-                "Subagent Completed",
-                subagent_session = session_info.session_id.to_string(),
-                status,
-            );
 
             session_info.message_end_index =
                 cx.update(|cx| Some(subagent.num_entries(cx).saturating_sub(1)));

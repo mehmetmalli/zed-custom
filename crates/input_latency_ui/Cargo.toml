@@ -16,4 +16,3 @@ chrono.workspace = true
 collections.workspace = true
 gpui = { workspace = true, features = ["input-latency-histogram"] }
 hdrhistogram.workspace = true
-telemetry.workspace = true

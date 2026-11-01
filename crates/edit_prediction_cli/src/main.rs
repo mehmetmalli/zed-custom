@@ -363,7 +363,6 @@ impl TeacherBackend {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 enum PredictionProvider {
-    Mercury,
     Zeta1,
     Zeta2(ZetaFormat),
     Baseten(ZetaFormat),
@@ -383,7 +382,6 @@ impl Default for PredictionProvider {
 impl std::fmt::Display for PredictionProvider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PredictionProvider::Mercury => write!(f, "mercury"),
             PredictionProvider::Zeta1 => write!(f, "zeta1"),
             PredictionProvider::Zeta2(format) => write!(f, "zeta2:{format}"),
             PredictionProvider::Baseten(format) => write!(f, "baseten:{format}"),
@@ -412,7 +410,6 @@ impl std::str::FromStr for PredictionProvider {
 
         let provider_lower = provider.to_lowercase();
         match provider_lower.as_str() {
-            "mercury" => Ok(PredictionProvider::Mercury),
             "zeta1" => Ok(PredictionProvider::Zeta1),
             "zeta2" => {
                 let format = arg.map(ZetaFormat::parse).transpose()?.unwrap_or_default();
@@ -450,7 +447,7 @@ impl std::str::FromStr for PredictionProvider {
             }
             _ => {
                 anyhow::bail!(
-                    "unknown provider `{provider}`. Valid options: mercury, zeta1, zeta2, zeta2:<version>, teacher, teacher:<backend>, teacher-multi-region, teacher-multi-region:<backend>, teacher-non-batching, teacher-multi-region-non-batching, repair\n\
+                    "unknown provider `{provider}`. Valid options: zeta1, zeta2, zeta2:<version>, teacher, teacher:<backend>, teacher-multi-region, teacher-multi-region:<backend>, teacher-non-batching, teacher-multi-region-non-batching, repair\n\
                  For zeta2, you can optionally specify a version like `zeta2:ordered` or `zeta2:V0113_Ordered`.\n\
                  For teacher providers, you can specify a backend like `teacher:sonnet46`, `teacher-multi-region:sonnet46`, `teacher-multi-region-non-batching:sonnet46`, or `teacher:gpt52`.\n\
                  Available zeta versions:\n{}",
@@ -732,7 +729,7 @@ async fn load_examples(
     let mut rejected_after_timestamps = Vec::new();
     let mut requested_after_timestamps = Vec::new();
     let mut settled_after_timestamps = Vec::new();
-    let mut rated_after_inputs: Vec<(String, Option<telemetry_events::EditPredictionRating>)> =
+    let mut rated_after_inputs: Vec<(String, Option<edit_prediction::EditPredictionRating>)> =
         Vec::new();
     let mut file_inputs = Vec::new();
 

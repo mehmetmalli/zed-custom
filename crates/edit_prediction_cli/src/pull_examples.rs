@@ -10,7 +10,7 @@ use std::fmt::Write as _;
 use std::io::Read;
 use std::sync::Arc;
 use std::time::Duration;
-use telemetry_events::EditPredictionRating;
+use edit_prediction::EditPredictionRating;
 
 use zeta_prompt::{ZetaFormat, ZetaPromptInput, excerpt_range_for_format};
 

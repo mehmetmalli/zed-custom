@@ -46,6 +46,7 @@ pub(super) enum EditPrediction {
 pub(super) struct EditPredictionState {
     pub(super) inlay_ids: Vec<InlayId>,
     pub(super) completion: EditPrediction,
+    #[allow(dead_code)]
     pub(super) completion_id: Option<SharedString>,
     pub(super) invalidation_range: Option<Range<Anchor>>,
 }
@@ -401,12 +402,6 @@ impl Editor {
                 cursor_position,
                 ..
             } => {
-                self.report_edit_prediction_event(
-                    active_edit_prediction.completion_id.clone(),
-                    true,
-                    cx,
-                );
-
                 match granularity {
                     EditPredictionGranularity::Full => {
                         let transaction_id_prev = self.buffer.read(cx).last_transaction_id(cx);
@@ -679,15 +674,6 @@ impl Editor {
         reason: EditPredictionDiscardReason,
         cx: &mut Context<Self>,
     ) -> bool {
-        if reason == EditPredictionDiscardReason::Rejected {
-            let completion_id = self
-                .active_edit_prediction
-                .as_ref()
-                .and_then(|active_completion| active_completion.completion_id.clone());
-
-            self.report_edit_prediction_event(completion_id, false, cx);
-        }
-
         if let Some(provider) = self.edit_prediction_provider() {
             provider.discard(reason, cx);
         }
@@ -1574,39 +1560,6 @@ impl Editor {
             Some(settings.edit_predictions_enabled_for_file(file, cx))
         })
         .unwrap_or(false)
-    }
-
-    fn report_edit_prediction_event(&self, id: Option<SharedString>, accepted: bool, cx: &App) {
-        let Some(provider) = self.edit_prediction_provider() else {
-            return;
-        };
-
-        let buffer_snapshot = self.buffer.read(cx).snapshot(cx);
-        let Some((position, _)) =
-            buffer_snapshot.anchor_to_buffer_anchor(self.selections.newest_anchor().head())
-        else {
-            return;
-        };
-        let Some(buffer) = self.buffer.read(cx).buffer(position.buffer_id) else {
-            return;
-        };
-
-        let extension = buffer
-            .read(cx)
-            .file()
-            .and_then(|file| Some(file.path().extension()?.to_string()));
-
-        let event_type = match accepted {
-            true => "Edit Prediction Accepted",
-            false => "Edit Prediction Discarded",
-        };
-        telemetry::event!(
-            event_type,
-            provider = provider.name(),
-            prediction_id = id,
-            suggestion_accepted = accepted,
-            file_extension = extension,
-        );
     }
 
     fn open_editor_at_anchor(

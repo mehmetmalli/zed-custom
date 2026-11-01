@@ -1,30 +1,23 @@
 use crate::{
     FormatPromptArgs, PredictArgs, PredictionProvider, TeacherBackend,
     anthropic_client::AnthropicClient,
-    example::{Example, ExamplePrediction, ExamplePrompt},
+    example::{Example, ExamplePrediction},
     format_prompt::{TeacherMultiRegionPrompt, TeacherPrompt, run_format_prompt},
     headless::EpAppState,
-    load_project::run_load_project,
     openai_client::OpenAiClient,
     parse_output::parse_prediction_output,
-    paths::{LATEST_EXAMPLE_RUN_DIR, RUN_DIR},
-    progress::{ExampleProgress, InfoStyle, Progress, Step, StepProgress},
+    progress::{ExampleProgress, Progress, Step, StepProgress},
     retrieve_context::run_context_retrieval,
 };
 use anyhow::Context as _;
 use cloud_llm_client::predict_edits_v3::{RawCompletionRequest, RawCompletionResponse};
-use edit_prediction::{DebugEvent, EditPredictionStore, Zeta2RawConfig};
-use futures::{AsyncReadExt as _, FutureExt as _, StreamExt as _, future::Shared};
-use gpui::{AppContext as _, AsyncApp, Task};
+use futures::AsyncReadExt as _;
+use gpui::AsyncApp;
 use http_client::{AsyncBody, HttpClient, Method};
 use reqwest_client::ReqwestClient;
-use std::{
-    fs,
-    sync::{
-        Arc, Mutex, OnceLock,
-        atomic::{AtomicUsize, Ordering::SeqCst},
-    },
-};
+use std::sync::{
+        Arc, OnceLock,
+    };
 use zeta_prompt::ZetaFormat;
 
 static ANTHROPIC_CLIENT: OnceLock<AnthropicClient> = OnceLock::new();
@@ -35,7 +28,7 @@ pub async fn run_prediction(
     args: &PredictArgs,
     app_state: Arc<EpAppState>,
     example_progress: &ExampleProgress,
-    mut cx: AsyncApp,
+    cx: AsyncApp,
 ) -> anyhow::Result<()> {
     let repetition_count = args.repetitions;
 
@@ -110,218 +103,11 @@ pub async fn run_prediction(
         return predict_baseten(example, format, &step_progress).await;
     }
 
-    run_load_project(example, app_state.clone(), example_progress, cx.clone()).await?;
-    run_context_retrieval(example, app_state.clone(), example_progress, cx.clone()).await?;
-
-    let step_progress = example_progress.start(Step::Predict);
-
-    if matches!(
-        provider,
-        PredictionProvider::Zeta1 | PredictionProvider::Zeta2(_)
-    ) {
-        step_progress.set_substatus("authenticating");
-        static AUTHENTICATED: OnceLock<Shared<Task<()>>> = OnceLock::new();
-        AUTHENTICATED
-            .get_or_init(|| {
-                let client = app_state.client.clone();
-                cx.spawn(async move |cx| {
-                    if let Err(e) = client.sign_in_with_optional_connect(true, cx).await {
-                        eprintln!("Authentication failed: {}", e);
-                    }
-                })
-                .shared()
-            })
-            .clone()
-            .await;
-    }
-
-    let ep_store = cx
-        .update(|cx| EditPredictionStore::try_global(cx))
-        .context("EditPredictionStore not initialized")?;
-
-    ep_store.update(&mut cx, |store, _cx| {
-        let model = match provider {
-            PredictionProvider::Zeta1 => edit_prediction::EditPredictionModel::Zeta,
-            PredictionProvider::Zeta2(_) => edit_prediction::EditPredictionModel::Zeta,
-            PredictionProvider::Mercury => edit_prediction::EditPredictionModel::Mercury,
-            PredictionProvider::Teacher(..)
-            | PredictionProvider::TeacherMultiRegion(..)
-            | PredictionProvider::TeacherNonBatching(..)
-            | PredictionProvider::TeacherMultiRegionNonBatching(..)
-            | PredictionProvider::Repair
-            | PredictionProvider::Baseten(_) => {
-                unreachable!()
-            }
-        };
-        store.set_edit_prediction_model(model);
-
-        // If user specified a non-default Zeta2 version, configure raw endpoint.
-        // ZED_ZETA_MODEL env var is optional.
-        if let PredictionProvider::Zeta2(format) = provider {
-            if format != ZetaFormat::default() {
-                let model_id = std::env::var("ZED_ZETA_MODEL").ok();
-                let environment = std::env::var("ZED_ZETA_ENVIRONMENT").ok();
-                store.set_zeta2_raw_config(Zeta2RawConfig {
-                    model_id,
-                    environment,
-                    format,
-                });
-            }
-        }
-    });
-    step_progress.set_substatus("configuring model");
-    let state = example.state.as_ref().context("state must be set")?;
-    let run_dir = RUN_DIR.join(&example.spec.name);
-
-    let updated_example = Arc::new(Mutex::new(example.clone()));
-    let current_run_ix = Arc::new(AtomicUsize::new(0));
-
-    let mut debug_rx = ep_store.update(&mut cx, |store, cx| store.debug_info(&state.project, cx));
-    let debug_task = cx.background_spawn({
-        let updated_example = updated_example.clone();
-        let current_run_ix = current_run_ix.clone();
-        let run_dir = run_dir.clone();
-        async move {
-            while let Some(event) = debug_rx.next().await {
-                let run_ix = current_run_ix.load(SeqCst);
-                let mut updated_example = updated_example.lock().unwrap();
-
-                let run_dir = if repetition_count > 1 {
-                    run_dir.join(format!("{:03}", run_ix))
-                } else {
-                    run_dir.clone()
-                };
-
-                match event {
-                    DebugEvent::EditPredictionStarted(request) => {
-                        assert_eq!(updated_example.predictions.len(), run_ix + 1);
-
-                        if let Some(prompt) = request.prompt {
-                            fs::write(run_dir.join("prediction_prompt.md"), &prompt)?;
-                            if matches!(provider, PredictionProvider::Zeta2(_)) {
-                                updated_example.prompt.get_or_insert(ExamplePrompt {
-                                    input: prompt,
-                                    expected_output: None,
-                                    rejected_output: None,
-                                    provider,
-                                    prefill: None,
-                                });
-                            }
-                        }
-                    }
-                    DebugEvent::EditPredictionFinished(request) => {
-                        assert_eq!(updated_example.predictions.len(), run_ix + 1);
-
-                        if let Some(output) = request.model_output {
-                            fs::write(run_dir.join("prediction_response.md"), &output)?;
-                            updated_example
-                                .predictions
-                                .last_mut()
-                                .unwrap()
-                                .actual_output = output;
-                        }
-                        if run_ix >= repetition_count {
-                            break;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            anyhow::Ok(())
-        }
-    });
-
-    for ix in 0..repetition_count {
-        current_run_ix.store(ix, SeqCst);
-        let run_dir = if repetition_count > 1 {
-            run_dir.join(format!("{:03}", ix))
-        } else {
-            run_dir.clone()
-        };
-
-        if repetition_count > 1 {
-            step_progress.set_substatus(format!(
-                "running prediction {}/{}",
-                ix + 1,
-                repetition_count
-            ));
-        } else {
-            step_progress.set_substatus("running prediction");
-        }
-
-        fs::create_dir_all(&run_dir)?;
-        if LATEST_EXAMPLE_RUN_DIR.is_symlink() {
-            fs::remove_file(&*LATEST_EXAMPLE_RUN_DIR)?;
-        }
-        #[cfg(unix)]
-        std::os::unix::fs::symlink(&run_dir, &*LATEST_EXAMPLE_RUN_DIR)?;
-        #[cfg(windows)]
-        std::os::windows::fs::symlink_dir(&run_dir, &*LATEST_EXAMPLE_RUN_DIR)?;
-
-        updated_example
-            .lock()
-            .unwrap()
-            .predictions
-            .push(ExamplePrediction {
-                actual_patch: None,
-                actual_output: String::new(),
-                actual_cursor: None,
-                error: None,
-                provider,
-                cumulative_logprob: None,
-                avg_logprob: None,
-            });
-
-        step_progress.set_substatus("requesting prediction");
-        let prediction = ep_store
-            .update(&mut cx, |store, cx| {
-                store.request_prediction(
-                    &state.project,
-                    &state.buffer,
-                    state.cursor_position,
-                    cloud_llm_client::PredictEditsRequestTrigger::Cli,
-                    cx,
-                )
-            })
-            .await?;
-
-        let actual_patch = prediction.and_then(|prediction| {
-            let prediction = prediction.prediction.ok()?;
-            prediction
-                .edit_preview
-                .as_unified_diff(prediction.snapshot.file(), &prediction.edits)
-        });
-
-        let has_prediction = actual_patch.as_ref().is_some_and(|p| !p.is_empty());
-
-        updated_example
-            .lock()
-            .unwrap()
-            .predictions
-            .last_mut()
-            .unwrap()
-            .actual_patch = actual_patch;
-
-        if ix == repetition_count - 1 {
-            let (info, style) = if has_prediction {
-                ("predicted", InfoStyle::Normal)
-            } else {
-                ("no prediction", InfoStyle::Warning)
-            };
-            step_progress.set_info(info, style);
-        }
-    }
-
-    ep_store.update(&mut cx, |store, _| {
-        store.remove_project(&state.project);
-    });
-    debug_task.await?;
-
-    *example = Arc::into_inner(updated_example)
-        .ok_or_else(|| anyhow::anyhow!("Failed to unwrap Arc"))?
-        .into_inner()
-        .map_err(|_| anyhow::anyhow!("Failed to unwrap Mutex"))?;
-    Ok(())
+    let _ = (app_state, cx);
+    anyhow::bail!(
+        "The Zed-hosted edit prediction providers (Zeta and Mercury) have been removed. \
+         No CLI-supported in-process providers remain."
+    );
 }
 
 async fn predict_teacher(

@@ -1,6 +1,6 @@
 ---
-title: AI Code Completion in Zed - Zeta, Copilot, Codestral, Mercury Coder
-description: Set up AI code completions in Zed with Zeta (built-in), GitHub Copilot, Codestral, or Mercury Coder. Multi-line predictions on every keystroke.
+title: AI Code Completion in Zed - Copilot, Codestral, Ollama
+description: Set up AI code completions in Zed with GitHub Copilot, Codestral, Ollama, or any OpenAI-compatible API. Multi-line predictions on every keystroke.
 ---
 
 # Edit Prediction
@@ -8,30 +8,7 @@ description: Set up AI code completions in Zed with Zeta (built-in), GitHub Copi
 Edit Prediction is how Zed's AI code completions work: an LLM predicts the code you want to write.
 Each keystroke sends a new request to the edit prediction provider, which returns individual or multi-line suggestions you accept by pressing `tab`.
 
-The default provider is [Zeta, an open source model developed by Zed](https://zed.dev/blog/zeta2), but you can also use [other providers](#other-providers) like GitHub Copilot, Mercury Coder, and Codestral.
-
-## Configuring Zeta
-
-To use Zeta, [sign in](../authentication.md#what-features-require-signing-in).
-Once signed in, predictions appear as you type.
-
-You can confirm that Zeta is properly configured by opening the [Settings Editor](zed://settings/edit_predictions.providers) (`Cmd+,` on macOS or `Ctrl+,` on Linux/Windows) and searching for `edit_predictions`. The `provider` field should be set to `Zed AI`.
-
-Or verify this in your settings.json:
-
-```json [settings]
-{
-  "edit_predictions": {
-    "provider": "zed"
-  }
-}
-```
-
-The Z icon in the status bar also indicates Zeta is active.
-
-### Pricing and Plans
-
-The free plan includes 2,000 Zeta predictions per month. The [Pro plan](../ai/plans-and-usage.md) removes this limit. See [Zed's pricing page](https://zed.dev/pricing) for details.
+The default provider is [GitHub Copilot](#github-copilot), but you can also use [other providers](#other-providers) like Codestral, Ollama, or any OpenAI-compatible API.
 
 ### Switching Modes {#switching-modes}
 
@@ -241,28 +218,6 @@ Copilot can provide multiple completion alternatives, and these can be navigated
 
 - {#action editor::NextEditPrediction} ({#kb editor::NextEditPrediction}): To cycle to the next edit prediction
 - {#action editor::PreviousEditPrediction} ({#kb editor::PreviousEditPrediction}): To cycle to the previous edit prediction
-
-### Mercury Coder {#mercury-coder}
-
-To use [Mercury Coder](https://www.inceptionlabs.ai/) by Inception Labs as your provider:
-
-1. Open the Settings Editor ({#kb zed::OpenSettings})
-2. Search for "Edit Predictions" and click **Configure Providers**
-3. Find the Mercury section and enter your API key from the
-   [Inception Labs dashboard](https://platform.inceptionlabs.ai/dashboard/api-keys)
-
-Alternatively, click the edit prediction icon in the status bar and select
-**Configure Providers** from the menu.
-
-After adding your API key, Mercury Coder will appear in the provider dropdown in the status bar menu, where you can select it. You can also set it directly in your settings file:
-
-```json [settings]
-{
-  "edit_predictions": {
-    "provider": "mercury"
-  }
-}
-```
 
 ### Codestral {#codestral}
 

@@ -156,7 +156,7 @@ pub use workspace_settings::{
     AutosaveSetting, BottomDockLayout, EncodingDisplayOptions, FocusFollowsMouse,
     RestoreOnStartupBehavior, StatusBarSettings, TabBarSettings, WorkspaceSettings,
 };
-use zed_actions::{Spawn, feedback::FileBugReport, theme::ToggleMode};
+use zed_actions::{Spawn, theme::ToggleMode};
 
 use crate::{dock::PanelSizeState, item::ItemBufferKind, notifications::NotificationId};
 use crate::{
@@ -1190,9 +1190,8 @@ impl AppState {
         let fs = fs::FakeFs::new(cx.background_executor().clone());
         <dyn Fs>::set_global(fs.clone(), cx);
         let languages = Arc::new(LanguageRegistry::test(cx.background_executor().clone()));
-        let clock = Arc::new(clock::FakeSystemClock::new());
         let http_client = http_client::FakeHttpClient::with_404_response();
-        let client = Client::new(clock, http_client, cx);
+        let client = Client::new(http_client, cx);
         let session = cx.new(|cx| AppSession::new(Session::test(), cx));
         let user_store = cx.new(|cx| UserStore::new(client.clone(), cx));
         let workspace_store = cx.new(|cx| WorkspaceStore::new(client.clone(), cx));
@@ -4119,12 +4118,7 @@ impl Workspace {
         let other_is_zoomed = self.zoomed.is_some() && self.zoomed_position != Some(dock_side);
         let was_visible = self.is_dock_at_position_open(dock_side, cx) && !other_is_zoomed;
 
-        if let Some(panel) = self.dock_at_position(dock_side).read(cx).active_panel() {
-            telemetry::event!(
-                "Panel Button Clicked",
-                name = panel.persistent_name(),
-                toggle_state = !was_visible
-            );
+        if let Some(_panel) = self.dock_at_position(dock_side).read(cx).active_panel() {
         }
         if was_visible {
             self.save_open_dock_positions(cx);
@@ -4293,11 +4287,6 @@ impl Workspace {
             self.close_panel::<T>(window, cx);
         }
 
-        telemetry::event!(
-            "Panel Button Clicked",
-            name = T::persistent_name(),
-            toggle_state = did_focus_panel
-        );
 
         did_focus_panel
     }
@@ -8326,11 +8315,6 @@ fn notify_if_database_failed(window: WindowHandle<MultiWorkspace>, cx: &mut Asyn
                         |cx| {
                             cx.new(|cx| {
                                 MessageNotification::new("Failed to load the database file.", cx)
-                                    .primary_message("File an Issue")
-                                    .primary_icon(IconName::Plus)
-                                    .primary_on_click(|window, cx| {
-                                        window.dispatch_action(Box::new(FileBugReport), cx)
-                                    })
                             })
                         },
                     );
@@ -10245,7 +10229,6 @@ async fn open_remote_project_inner(
     }
 
     let workspace = window.update(cx, |multi_workspace, window, cx| {
-        telemetry::event!("SSH Project Opened");
 
         let new_workspace = cx.new(|cx| {
             let mut workspace =

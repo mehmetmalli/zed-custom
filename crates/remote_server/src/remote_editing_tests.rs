@@ -4,7 +4,6 @@
 use crate::headless_project::HeadlessProject;
 use agent::{AgentTool, ReadFileTool, ReadFileToolInput, ToolCallEventStream, ToolInput};
 use client::{Client, UserStore};
-use clock::FakeSystemClock;
 use collections::{HashMap, HashSet};
 use language_model::LanguageModelToolResultContent;
 use languages::rust_lang;
@@ -2796,13 +2795,7 @@ fn build_project(ssh: Entity<RemoteClient>, cx: &mut TestAppContext) -> Entity<P
         }
     });
 
-    let client = cx.update(|cx| {
-        Client::new(
-            Arc::new(FakeSystemClock::new()),
-            FakeHttpClient::with_404_response(),
-            cx,
-        )
-    });
+    let client = cx.update(|cx| Client::new(FakeHttpClient::with_404_response(), cx));
 
     let node = NodeRuntime::unavailable();
     let user_store = cx.new(|cx| UserStore::new(client.clone(), cx));
